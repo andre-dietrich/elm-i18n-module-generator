@@ -6,6 +6,8 @@ const path = require('path')
 const argv = require('yargs').argv
 const R = require('ramda')
 
+const YAML = require('yaml')
+
 const [
   localeDir = path.join(__dirname, '../locale'),
   trFile = path.join(__dirname, '../Translations.elm'),
@@ -73,8 +75,13 @@ getCodeFromLn lang =
     case lang of \n${R.pipe(R.map(codeCase), R.join('\n'))(languages)}
 `
 
-const getFileContent = (filename) =>
-  fs.readJsonSync(path.join(localeDir, filename), 'utf8')
+const getFileContent = (filename) => {
+  const data = fs.readFileSync(path.join(localeDir, filename), 'utf8')
+  
+  console.warn(data)
+  
+  return YAML.parse(data)
+}
 
 const writeFileContent = (content) => {
   const generateTrElmModule = (snippets) =>
