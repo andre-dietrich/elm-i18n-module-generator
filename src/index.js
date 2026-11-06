@@ -3,7 +3,7 @@
 const fs = require('fs-extra')
 const path = require('path')
 
-const argv = require('yargs').argv
+const argv = require('yargs').boolean(['c', 'compact']).argv
 const R = require('ramda')
 
 const YAML = require('yaml')
@@ -14,13 +14,25 @@ const [
 ] = argv._
 
 let defaultLang = argv.d || argv.default
+const compact = argv.c || argv.compact
 
 if (argv.h || argv.help) {
   console.log('elm-i18n-gen\n')
   console.log('usage: elm-i18n-gen -d EN locale\n')
   console.log('-h --help         print this help')
   console.log('-d --default      define a default language')
+  console.log(
+    '-c --compact      one string per language instead of a case per text,',
+  )
+  console.log(
+    '                  much smaller code, requires --default (see README)',
+  )
   process.exit(0)
+}
+
+if (compact && typeof defaultLang !== 'string') {
+  console.error('--compact requires a default language, e.g. --default en')
+  process.exit(1)
 }
 
 const files = fs.readdirSync(localeDir)
@@ -77,9 +89,7 @@ getCodeFromLn lang =
 
 const getFileContent = (filename) => {
   const data = fs.readFileSync(path.join(localeDir, filename), 'utf8')
-  
-  console.warn(data)
-  
+
   return YAML.parse(data)
 }
 
@@ -200,5 +210,9 @@ for (const [key, value] of Object.entries(fileContentMap)) {
   fileContentMap[key] = value.sortBy('ln')
 }
 
-writeFileContent(createSnippets(fileContentMap))
+if (compact) {
+  fs.writeFileSync(trFile, require('./compact')(fileContentMap, languages), 'utf8')
+} else {
+  writeFileContent(createSnippets(fileContentMap))
+}
 process.exit(0)

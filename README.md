@@ -196,6 +196,71 @@ tigersRoar lang =
             "Brüll!"
 ```
 
+#### Compact output
+
+With `--compact` (or `-c`) every language becomes one string, which is split
+once when the language is selected. Every text is a lookup by its index, with
+the text of the default language as fallback. A `case` over all languages per
+text compiles to a `switch` per function, which is mostly code: for 44
+languages and 140 texts this reduces the minified JavaScript by about a third
+(242 KB to 162 KB, gzip 76 KB to 60 KB) and the code the browser has to
+compile. `--compact` requires a default language.
+
+`elm-i18n-gen --default en --compact path/to/localeFolder path/to/output/Translations.elm`
+
+```elm
+type Lang
+    = Lang String (Array String)
+
+
+en : Lang
+en =
+    Lang "en" Array.empty
+
+
+getLnFromCode : String -> Maybe Lang
+getLnFromCode code =
+    case String.toLower code of
+        "de" ->
+            Just (i18nLoad "de" i18nDe)
+
+        "en" ->
+            Just en
+
+        _ ->
+            Nothing
+
+
+i18nDe : String
+i18nDe =
+    "Guten Tag \u{001E} \u{001E}\u{001F}Hallo\u{001F}Brüll!"
+
+
+hello : Lang -> String
+hello lang =
+    i18nGet 1 "Hello" lang
+
+
+gooddaySalute : Lang -> String -> String -> String
+gooddaySalute lang str0 str1 =
+    i18nFill [ str0, str1 ] (i18nGet 0 "Good Day \u{001E} \u{001E}" lang)
+```
+
+The functions and their signatures stay the same, the differences are:
+
+- `Lang` has no variant per language anymore, the default language is a value
+  named by its code (`en` instead of `En`), all others come from
+  `getLnFromCode`.
+- `getLnFromCode` splits the texts of the language every time it is called,
+  call it once and keep the result in your model.
+- The names `i18nLoad`, `i18nGet`, `i18nFill` and `i18n<Lang>` are used by the
+  generated module, a translation key with one of these names is an error, as
+  is a translation that contains `\u001F` or `\u001E`.
+
+`node tests/compact/run.js path/to/localeFolder en` checks that the compact
+module returns the same texts as the `case` module for every language and
+every function (needs elm 0.19.1 on the PATH or in `$ELM`).
+
 ### Using the Translations module
 
 Import the generated module in your elm code like this.
