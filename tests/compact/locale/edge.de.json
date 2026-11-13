@@ -1,0 +1,5 @@
+{
+  "symbols": "a|b~c^d#e",
+  "salute": "Hallo {{name}}",
+  "pair": "{{a}} und {{b}}"
+}

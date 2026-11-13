@@ -85,9 +85,9 @@ With `--compact` (or `-c`) every language becomes one string, which is split
 once when the language is selected. Every text is a lookup by its index, with
 the text of the default language as fallback. The classic output (without
 `--compact`, see below) has a `case` over all languages per text, which
-compiles to a `switch` per function and is mostly code: for 44 languages and
-140 texts `--compact` reduces the minified JavaScript by about a third (242 KB
-to 162 KB, gzip 76 KB to 60 KB) and the code the browser has to compile.
+compiles to a `switch` per function and is mostly code: for 45 languages and
+137 texts `--compact` reduces the minified JavaScript from 240 KB to 147 KB
+(gzip 77 KB to 58 KB) and the code the browser has to compile.
 `--compact` requires a default language.
 
 `elm-i18n-gen --default en --compact path/to/localeFolder path/to/output/Translations.elm`
@@ -106,9 +106,16 @@ en =
 
 getLnFromCode : String -> Maybe Lang
 getLnFromCode code =
-    case String.toLower code of
+    let
+        lower =
+            String.toLower code
+
+        load texts =
+            Just (Lang lower (Array.fromList (String.split "|" texts)))
+    in
+    case lower of
         "de" ->
-            Just (i18nLoad "de" i18nDe)
+            load "Guten Tag ~ ~|Hallo|Brüll!"
 
         "en" ->
             Just en
@@ -122,24 +129,19 @@ getCodeFromLn (Lang code _) =
     code
 
 
-i18nDe : String
-i18nDe =
-    "Guten Tag \u{001E} \u{001E}\u{001F}Hallo\u{001F}Brüll!"
-
-
 hello : Lang -> String
-hello lang =
-    i18nGet 1 "Hello" lang
+hello =
+    i18nGet 1 "Hello"
 
 
 gooddaySalute : Lang -> String -> String -> String
 gooddaySalute lang str0 str1 =
-    i18nFill [ str0, str1 ] (i18nGet 0 "Good Day \u{001E} \u{001E}" lang)
+    i18nFill [ str0, str1 ] (i18nGet 0 "Good Day ~ ~" lang)
 
 
 tigersRoar : Lang -> String
-tigersRoar lang =
-    i18nGet 2 "Roar!" lang
+tigersRoar =
+    i18nGet 2 "Roar!"
 ```
 
 The functions and their signatures are the same as in the classic output, the
@@ -150,9 +152,19 @@ differences are:
 - `getLnFromCode` splits the texts of the language every time it is called,
   call it once and keep the result in your model.
 - A text missing in a language falls back to the default language.
-- The names `i18nLoad`, `i18nGet`, `i18nFill` and `i18n<Lang>` are used by the
-  generated module, a translation key with one of these names is an error, as
-  is a translation that contains `\u001F` or `\u001E`.
+- The names `i18nGet` and `i18nFill` are used by the generated module, a
+  translation key with one of these names is an error.
+- The texts of a language are separated by a character that no translation
+  contains, and another one stands for `{{...}}`: the first two free ones of
+  `|`, `~`, `^`, `#`, `\u001F` and `\u001E`. A printable character is one byte
+  with every minifier, which a control character is not (Parcel writes
+  `\x1f`).
+- Languages of the same script are next to each other in `getLnFromCode`, this
+  way they compress better.
+
+If you minify with esbuild, pass `--charset=utf8`: without it every non-ASCII
+character is written as `\uXXXX` (252 KB instead of 147 KB in the example
+above).
 
 `node tests/compact/run.js path/to/localeFolder en` checks that the compact
 module returns the same texts as the classic module for every language and

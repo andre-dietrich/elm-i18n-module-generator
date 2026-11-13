@@ -6,7 +6,7 @@
     "elm-i18n-gen": "./src/index.js"
   },
   "scripts": {
-    "test": "node tests/compact/run.js locale en"
+    "test": "node tests/compact/run.js locale en && node tests/compact/run.js tests/compact/locale en"
   },
   "author": "",
   "license": "ISC",

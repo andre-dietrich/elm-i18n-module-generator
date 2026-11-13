@@ -1,0 +1,6 @@
+{
+  "symbols": "pipe | tilde ~ caret ^ hash #",
+  "salute": "Hello {{name}} {{title}}",
+  "pair": "{{a}} and {{b}}",
+  "onlyDefault": "only english"
+}
