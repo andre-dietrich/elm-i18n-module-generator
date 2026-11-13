@@ -1,18 +1,16 @@
 {
   "name": "elm-i18n-gen",
   "version": "1.1.0",
-  "description": "A generator, which generates an Elm functions from json language files",
-  "main": "index.js",
+  "description": "Generates an Elm module from JSON or YAML translation files",
   "bin": {
     "elm-i18n-gen": "./src/index.js"
   },
   "scripts": {
-    "test": "elm-test"
+    "test": "node tests/compact/run.js locale en"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "debug": "^2.6.3",
     "elm": "^0.19.1-5"
   },
   "dependencies": {
@@ -20,5 +18,8 @@
     "ramda": "^0.23.0",
     "yaml": "^2.2.1",
     "yargs": "^7.0.2"
+  },
+  "allowScripts": {
+    "elm@0.19.1-6": true
   }
 }
